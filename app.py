@@ -114,7 +114,7 @@ def render_device_selector(api: TrimlightAPI):
 
     col1, col2 = st.sidebar.columns([3, 1])
     with col2:
-        if st.button("🔄", help="Refresh devices"):
+        if st.button("🔄", help="Refresh devices", key="refresh_devices_btn"):
             refresh_devices(api)
 
     if not st.session_state.devices:
@@ -175,7 +175,8 @@ def render_device_controls(api: TrimlightAPI):
 
         with power_col1:
             if st.button("Off", use_container_width=True,
-                        type="primary" if current_state == 0 else "secondary"):
+                        type="primary" if current_state == 0 else "secondary",
+                        key="power_off_btn"):
                 try:
                     api.set_device_switch_state(device_id, 0)
                     st.success("Lights turned off")
@@ -185,7 +186,8 @@ def render_device_controls(api: TrimlightAPI):
 
         with power_col2:
             if st.button("Manual", use_container_width=True,
-                        type="primary" if current_state == 1 else "secondary"):
+                        type="primary" if current_state == 1 else "secondary",
+                        key="power_manual_btn"):
                 try:
                     api.set_device_switch_state(device_id, 1)
                     st.success("Manual mode enabled")
@@ -195,7 +197,8 @@ def render_device_controls(api: TrimlightAPI):
 
         with power_col3:
             if st.button("Timer", use_container_width=True,
-                        type="primary" if current_state == 2 else "secondary"):
+                        type="primary" if current_state == 2 else "secondary",
+                        key="power_timer_btn"):
                 try:
                     api.set_device_switch_state(device_id, 2)
                     st.success("Timer mode enabled")
@@ -214,7 +217,8 @@ def render_device_controls(api: TrimlightAPI):
                 min_value=1,
                 max_value=2048,
                 value=min(total_leds, 200),
-                label_visibility="collapsed"
+                label_visibility="collapsed",
+                key="led_count_input"
             )
         else:
             st.session_state.num_leds = st.number_input(
@@ -222,7 +226,8 @@ def render_device_controls(api: TrimlightAPI):
                 min_value=1,
                 max_value=2048,
                 value=st.session_state.num_leds,
-                label_visibility="collapsed"
+                label_visibility="collapsed",
+                key="led_count_input_default"
             )
 
     with col3:
@@ -234,7 +239,8 @@ def render_device_controls(api: TrimlightAPI):
             options=list(view_options.keys()),
             format_func=lambda x: view_options[x],
             horizontal=True,
-            label_visibility="collapsed"
+            label_visibility="collapsed",
+            key="view_type_radio"
         )
 
 
@@ -248,7 +254,7 @@ def render_builtin_effects(api: TrimlightAPI):
 
     # Effect category filter
     categories = ["All"] + list(EFFECT_CATEGORIES.keys())
-    selected_category = st.selectbox("Category", categories)
+    selected_category = st.selectbox("Category", categories, key="builtin_category")
 
     # Filter effects by category
     if selected_category == "All":
@@ -273,14 +279,15 @@ def render_builtin_effects(api: TrimlightAPI):
     selected_mode = st.selectbox(
         "Select Effect",
         options=list(filtered_effects.keys()),
-        format_func=lambda x: f"{x}: {filtered_effects[x]}"
+        format_func=lambda x: f"{x}: {filtered_effects[x]}",
+        key="builtin_effect_select"
     )
 
     # Preview and Apply buttons
     col1, col2, col3 = st.columns([1, 1, 2])
 
     with col1:
-        if st.button("👁️ Preview on Device", use_container_width=True):
+        if st.button("👁️ Preview on Device", use_container_width=True, key="builtin_preview_device"):
             try:
                 api.preview_builtin_effect(
                     device_id, selected_mode, speed, brightness, pixel_len, reverse
@@ -290,7 +297,7 @@ def render_builtin_effects(api: TrimlightAPI):
                 st.error(f"Error: {e.message}")
 
     with col2:
-        if st.button("🎬 Animate Preview", use_container_width=True):
+        if st.button("🎬 Animate Preview", use_container_width=True, key="builtin_animate"):
             st.session_state.is_animating = not st.session_state.is_animating
 
     # Visual preview
@@ -309,7 +316,8 @@ def render_custom_effects(api: TrimlightAPI):
     mode = st.selectbox(
         "Animation Mode",
         options=list(CUSTOM_EFFECT_MODES.keys()),
-        format_func=lambda x: CUSTOM_EFFECT_MODES[x]
+        format_func=lambda x: CUSTOM_EFFECT_MODES[x],
+        key="custom_mode_select"
     )
 
     col1, col2 = st.columns(2)
@@ -372,7 +380,7 @@ def render_custom_effects(api: TrimlightAPI):
     st.session_state.custom_pixels = updated_pixels
 
     # Add new segment button
-    if st.button("➕ Add Segment"):
+    if st.button("➕ Add Segment", key="add_segment_btn"):
         st.session_state.custom_pixels.append({
             "index": len(st.session_state.custom_pixels),
             "count": 10,
@@ -397,7 +405,7 @@ def render_custom_effects(api: TrimlightAPI):
     col1, col2, col3 = st.columns([1, 1, 2])
 
     with col1:
-        if st.button("👁️ Preview Custom", use_container_width=True):
+        if st.button("👁️ Preview Custom", use_container_width=True, key="custom_preview_device"):
             try:
                 api.preview_custom_effect(device_id, mode, speed, brightness, api_pixels)
                 st.success("Custom preview sent!")
@@ -405,7 +413,7 @@ def render_custom_effects(api: TrimlightAPI):
                 st.error(f"Error: {e.message}")
 
     with col2:
-        if st.button("🎬 Animate Custom", use_container_width=True):
+        if st.button("🎬 Animate Custom", use_container_width=True, key="custom_animate"):
             st.session_state.is_animating = not st.session_state.is_animating
 
     # Visual preview
@@ -502,7 +510,7 @@ def render_effect_preview(mode: int, effect_type: str, speed: int = 100,
         st.markdown(f"**Frame:** {frame}")
 
     with col3:
-        if st.button("⏮️ Reset Frame"):
+        if st.button("⏮️ Reset Frame", key=f"reset_frame_{effect_type}"):
             st.session_state.preview_frame = 0
             st.rerun()
 
@@ -636,11 +644,12 @@ def main():
             demo_mode = st.selectbox(
                 "Demo Effect",
                 options=list(BUILTIN_EFFECTS.keys())[:20],
-                format_func=lambda x: BUILTIN_EFFECTS[x]
+                format_func=lambda x: BUILTIN_EFFECTS[x],
+                key="demo_effect_select"
             )
 
         with demo_col2:
-            demo_leds = st.slider("LED Count", 20, 200, 100)
+            demo_leds = st.slider("LED Count", 20, 200, 100, key="demo_led_slider")
 
         st.session_state.num_leds = demo_leds
 
@@ -666,7 +675,7 @@ def main():
                        unsafe_allow_html=True)
 
         # Auto-animate demo
-        if st.checkbox("▶️ Animate Demo"):
+        if st.checkbox("▶️ Animate Demo", key="demo_animate_checkbox"):
             st.session_state.preview_frame += 1
             time.sleep(0.05)
             st.rerun()
