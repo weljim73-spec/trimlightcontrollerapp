@@ -157,6 +157,7 @@ def render_device_selector(api: TrimlightAPI):
 def render_device_controls(api: TrimlightAPI):
     """Render device control panel."""
     if not st.session_state.device_details:
+        st.warning("No device details available")
         return
 
     details = st.session_state.device_details
@@ -164,79 +165,71 @@ def render_device_controls(api: TrimlightAPI):
 
     st.subheader("⚡ Device Controls")
 
-    col1, col2, col3 = st.columns(3)
+    # Power controls - use a single row with all controls
+    current_state = details.get('switchState', 0)
+    state_labels = {0: "Off", 1: "Manual", 2: "Timer"}
+    current_label = state_labels.get(current_state, "Unknown")
 
-    with col1:
-        # Power controls
-        current_state = details.get('switchState', 0)
-        state_labels = {0: "Off", 1: "Manual", 2: "Timer"}
-        current_label = state_labels.get(current_state, "Unknown")
+    st.markdown(f"**Power Mode** — currently: **{current_label}**")
 
-        st.markdown(f"**Power Mode** — currently: **{current_label}**")
+    col_off, col_manual, col_timer, col_led, col_view = st.columns([1, 1, 1, 2, 2])
 
-        btn_col1, btn_col2, btn_col3 = st.columns(3)
+    with col_off:
+        if st.button("Off", key="power_off_btn"):
+            try:
+                api.set_device_switch_state(device_id, 0)
+                refresh_device_details(api, device_id)
+                st.rerun()
+            except APIError as e:
+                st.error(f"Error: {e.message}")
 
-        with btn_col1:
-            if st.button("Off", key="power_off_btn", use_container_width=True):
-                try:
-                    api.set_device_switch_state(device_id, 0)
-                    refresh_device_details(api, device_id)
-                    st.rerun()
-                except APIError as e:
-                    st.error(f"Error: {e.message}")
+    with col_manual:
+        if st.button("Manual", key="power_manual_btn"):
+            try:
+                api.set_device_switch_state(device_id, 1)
+                refresh_device_details(api, device_id)
+                st.rerun()
+            except APIError as e:
+                st.error(f"Error: {e.message}")
 
-        with btn_col2:
-            if st.button("Manual", key="power_manual_btn", use_container_width=True):
-                try:
-                    api.set_device_switch_state(device_id, 1)
-                    refresh_device_details(api, device_id)
-                    st.rerun()
-                except APIError as e:
-                    st.error(f"Error: {e.message}")
+    with col_timer:
+        if st.button("Timer", key="power_timer_btn"):
+            try:
+                api.set_device_switch_state(device_id, 2)
+                refresh_device_details(api, device_id)
+                st.rerun()
+            except APIError as e:
+                st.error(f"Error: {e.message}")
 
-        with btn_col3:
-            if st.button("Timer", key="power_timer_btn", use_container_width=True):
-                try:
-                    api.set_device_switch_state(device_id, 2)
-                    refresh_device_details(api, device_id)
-                    st.rerun()
-                except APIError as e:
-                    st.error(f"Error: {e.message}")
-
-    with col2:
+    with col_led:
         # LED count setting
-        st.markdown("**LED Count**")
         ports = details.get('ports', [])
         if ports:
             total_leds = sum(p.get('end', 0) - p.get('start', 0) + 1 for p in ports)
             st.session_state.num_leds = st.number_input(
-                "Number of LEDs",
+                "LED Count",
                 min_value=1,
                 max_value=2048,
                 value=min(total_leds, 200),
-                label_visibility="collapsed",
                 key="led_count_input"
             )
         else:
             st.session_state.num_leds = st.number_input(
-                "Number of LEDs",
+                "LED Count",
                 min_value=1,
                 max_value=2048,
                 value=st.session_state.num_leds,
-                label_visibility="collapsed",
                 key="led_count_input_default"
             )
 
-    with col3:
+    with col_view:
         # View type toggle
-        st.markdown("**Preview Style**")
-        view_options = {"linear": "📊 Linear Strip", "house": "🏠 House Outline"}
+        view_options = {"linear": "📊 Linear", "house": "🏠 House"}
         st.session_state.view_type = st.radio(
-            "View Type",
+            "Preview Style",
             options=list(view_options.keys()),
             format_func=lambda x: view_options[x],
             horizontal=True,
-            label_visibility="collapsed",
             key="view_type_radio"
         )
 
