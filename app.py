@@ -189,34 +189,40 @@ def render_device_controls(api: TrimlightAPI):
         if st.button("Off", key="power_off_btn"):
             try:
                 api.set_device_switch_state(device_id, 0)  # 0 = Off
-                time.sleep(0.5)  # Allow API to update state
+                time.sleep(1.0)  # Allow API to update state
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
             except APIError as e:
-                st.error(f"Error: {e.message}")
+                st.error(f"Error setting Off: {e.message} (code: {e.code})")
+            except Exception as e:
+                st.error(f"Unexpected error: {str(e)}")
 
     with col_manual:
         if st.button("Manual", key="power_manual_btn"):
             try:
                 api.set_device_switch_state(device_id, 1)  # 1 = Manual
-                time.sleep(0.5)  # Allow API to update state
+                time.sleep(1.0)  # Allow API to update state
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
             except APIError as e:
-                st.error(f"Error: {e.message}")
+                st.error(f"Error setting Manual: {e.message} (code: {e.code})")
+            except Exception as e:
+                st.error(f"Unexpected error: {str(e)}")
 
     with col_timer:
         if st.button("Timer", key="power_timer_btn"):
             try:
                 api.set_device_switch_state(device_id, 2)  # 2 = Timer
-                time.sleep(0.5)  # Allow API to update state
+                time.sleep(1.0)  # Allow API to update state
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
             except APIError as e:
-                st.error(f"Error: {e.message}")
+                st.error(f"Error setting Timer: {e.message} (code: {e.code})")
+            except Exception as e:
+                st.error(f"Unexpected error: {str(e)}")
 
     with col_led:
         # LED count setting
