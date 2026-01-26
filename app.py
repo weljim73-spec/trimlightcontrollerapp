@@ -185,59 +185,34 @@ def render_device_controls(api: TrimlightAPI):
     col_off, col_manual, col_timer, col_led, col_view = st.columns([1, 1, 1, 2, 2])
 
     # API values: 0=Off, 1=Manual, 2=Timer (per API documentation)
+    def set_power_mode(mode: int, mode_name: str):
+        """Set power mode and update local state optimistically."""
+        try:
+            api.set_device_switch_state(device_id, mode)
+            # Optimistically update local state immediately
+            for device in st.session_state.devices:
+                if device.get('deviceId') == device_id:
+                    device['switchState'] = mode
+                    break
+            if st.session_state.device_details:
+                st.session_state.device_details['switchState'] = mode
+            st.rerun()
+        except APIError as e:
+            st.error(f"Error setting {mode_name}: {e.message} (code: {e.code})")
+        except Exception as e:
+            st.error(f"Unexpected error: {str(e)}")
+
     with col_off:
         if st.button("Off", key="power_off_btn"):
-            try:
-                api.set_device_switch_state(device_id, 0)  # 0 = Off
-                time.sleep(1.5)  # Allow device to update
-                try:
-                    api.notify_update_shadow(device_id)  # Request fresh state
-                    time.sleep(0.5)
-                except:
-                    pass
-                refresh_devices(api)
-                refresh_device_details(api, device_id)
-                st.rerun()
-            except APIError as e:
-                st.error(f"Error setting Off: {e.message} (code: {e.code})")
-            except Exception as e:
-                st.error(f"Unexpected error: {str(e)}")
+            set_power_mode(0, "Off")
 
     with col_manual:
         if st.button("Manual", key="power_manual_btn"):
-            try:
-                api.set_device_switch_state(device_id, 1)  # 1 = Manual
-                time.sleep(1.5)  # Allow device to update
-                try:
-                    api.notify_update_shadow(device_id)  # Request fresh state
-                    time.sleep(0.5)
-                except:
-                    pass
-                refresh_devices(api)
-                refresh_device_details(api, device_id)
-                st.rerun()
-            except APIError as e:
-                st.error(f"Error setting Manual: {e.message} (code: {e.code})")
-            except Exception as e:
-                st.error(f"Unexpected error: {str(e)}")
+            set_power_mode(1, "Manual")
 
     with col_timer:
         if st.button("Timer", key="power_timer_btn"):
-            try:
-                api.set_device_switch_state(device_id, 2)  # 2 = Timer
-                time.sleep(1.5)  # Allow device to update
-                try:
-                    api.notify_update_shadow(device_id)  # Request fresh state
-                    time.sleep(0.5)
-                except:
-                    pass
-                refresh_devices(api)
-                refresh_device_details(api, device_id)
-                st.rerun()
-            except APIError as e:
-                st.error(f"Error setting Timer: {e.message} (code: {e.code})")
-            except Exception as e:
-                st.error(f"Unexpected error: {str(e)}")
+            set_power_mode(2, "Timer")
 
     with col_led:
         # LED count setting
