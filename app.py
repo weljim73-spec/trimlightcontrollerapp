@@ -297,7 +297,9 @@ def render_builtin_effects(api: TrimlightAPI):
                 )
                 st.success("Preview sent!")
             except APIError as e:
-                st.error(f"Error: {e.message}")
+                st.error(f"Preview error: {e.message}")
+            except Exception as e:
+                st.error(f"Preview error: {str(e)}")
 
     with col2:
         if st.button("🎬 Animate Preview", use_container_width=True, key="builtin_animate"):
@@ -413,7 +415,9 @@ def render_custom_effects(api: TrimlightAPI):
                 api.preview_custom_effect(device_id, mode, speed, brightness, api_pixels)
                 st.success("Custom preview sent!")
             except APIError as e:
-                st.error(f"Error: {e.message}")
+                st.error(f"Preview error: {e.message}")
+            except Exception as e:
+                st.error(f"Preview error: {str(e)}")
 
     with col2:
         if st.button("🎬 Animate Custom", use_container_width=True, key="custom_animate"):
