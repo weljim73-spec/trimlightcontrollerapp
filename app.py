@@ -189,7 +189,12 @@ def render_device_controls(api: TrimlightAPI):
         if st.button("Off", key="power_off_btn"):
             try:
                 api.set_device_switch_state(device_id, 0)  # 0 = Off
-                time.sleep(1.0)  # Allow API to update state
+                time.sleep(1.5)  # Allow device to update
+                try:
+                    api.notify_update_shadow(device_id)  # Request fresh state
+                    time.sleep(0.5)
+                except:
+                    pass
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
@@ -202,7 +207,12 @@ def render_device_controls(api: TrimlightAPI):
         if st.button("Manual", key="power_manual_btn"):
             try:
                 api.set_device_switch_state(device_id, 1)  # 1 = Manual
-                time.sleep(1.0)  # Allow API to update state
+                time.sleep(1.5)  # Allow device to update
+                try:
+                    api.notify_update_shadow(device_id)  # Request fresh state
+                    time.sleep(0.5)
+                except:
+                    pass
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
@@ -215,7 +225,12 @@ def render_device_controls(api: TrimlightAPI):
         if st.button("Timer", key="power_timer_btn"):
             try:
                 api.set_device_switch_state(device_id, 2)  # 2 = Timer
-                time.sleep(1.0)  # Allow API to update state
+                time.sleep(1.5)  # Allow device to update
+                try:
+                    api.notify_update_shadow(device_id)  # Request fresh state
+                    time.sleep(0.5)
+                except:
+                    pass
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
