@@ -148,7 +148,8 @@ def render_device_selector(api: TrimlightAPI):
             st.sidebar.markdown(f"**Status:** {status}")
 
             switch_state = device.get('switchState', 0)
-            state_text = {0: "Off", 1: "Manual", 2: "Timer"}.get(switch_state, "Unknown")
+            # API values: 0=Timer, 1=Off, 2=Manual (based on observed behavior)
+            state_text = {0: "Timer", 1: "Off", 2: "Manual"}.get(switch_state, "Unknown")
             st.sidebar.markdown(f"**Mode:** {state_text}")
 
             st.sidebar.markdown(f"**Firmware:** {device.get('fwVersionName', 'N/A')}")
@@ -175,17 +176,23 @@ def render_device_controls(api: TrimlightAPI):
     if current_state is None:
         current_state = details.get('switchState', 0)
 
-    state_labels = {0: "Off", 1: "Manual", 2: "Timer"}
+    # Based on observed behavior:
+    # API value 0 = Timer (actual)
+    # API value 1 = Off (actual)
+    # API value 2 = Manual (actual)
+    state_labels = {0: "Timer", 1: "Off", 2: "Manual"}
     current_label = state_labels.get(current_state, "Unknown")
 
     st.markdown(f"**Power Mode** — currently: **{current_label}**")
 
     col_off, col_manual, col_timer, col_led, col_view = st.columns([1, 1, 1, 2, 2])
 
+    # API values based on observed behavior:
+    # 0 = Timer, 1 = Off, 2 = Manual
     with col_off:
         if st.button("Off", key="power_off_btn"):
             try:
-                api.set_device_switch_state(device_id, 0)
+                api.set_device_switch_state(device_id, 1)  # 1 = Off
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
@@ -195,7 +202,7 @@ def render_device_controls(api: TrimlightAPI):
     with col_manual:
         if st.button("Manual", key="power_manual_btn"):
             try:
-                api.set_device_switch_state(device_id, 1)
+                api.set_device_switch_state(device_id, 2)  # 2 = Manual
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
@@ -205,7 +212,7 @@ def render_device_controls(api: TrimlightAPI):
     with col_timer:
         if st.button("Timer", key="power_timer_btn"):
             try:
-                api.set_device_switch_state(device_id, 2)
+                api.set_device_switch_state(device_id, 0)  # 0 = Timer
                 refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
