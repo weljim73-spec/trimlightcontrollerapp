@@ -167,28 +167,37 @@ def render_device_controls(api: TrimlightAPI):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        # Power controls - show current state clearly
+        # Power controls
         current_state = details.get('switchState', 0)
-        state_options = ["Off", "Manual", "Timer"]
+        state_labels = {0: "Off", 1: "Manual", 2: "Timer"}
+        current_label = state_labels.get(current_state, "Unknown")
 
-        st.markdown("**Power Mode**")
+        st.markdown(f"**Power Mode** — currently: **{current_label}**")
 
-        selected_power = st.selectbox(
-            "Power Mode",
-            options=state_options,
-            index=current_state if current_state in [0, 1, 2] else 0,
-            key="power_mode_select",
-            label_visibility="collapsed"
-        )
+        btn_col1, btn_col2, btn_col3 = st.columns(3)
 
-        # Map selection back to state value
-        new_state = state_options.index(selected_power)
-
-        # Show apply button to confirm change
-        if new_state != current_state:
-            if st.button("Apply Power Mode", key="apply_power_btn", type="primary"):
+        with btn_col1:
+            if st.button("Off", key="power_off_btn", use_container_width=True):
                 try:
-                    api.set_device_switch_state(device_id, new_state)
+                    api.set_device_switch_state(device_id, 0)
+                    refresh_device_details(api, device_id)
+                    st.rerun()
+                except APIError as e:
+                    st.error(f"Error: {e.message}")
+
+        with btn_col2:
+            if st.button("Manual", key="power_manual_btn", use_container_width=True):
+                try:
+                    api.set_device_switch_state(device_id, 1)
+                    refresh_device_details(api, device_id)
+                    st.rerun()
+                except APIError as e:
+                    st.error(f"Error: {e.message}")
+
+        with btn_col3:
+            if st.button("Timer", key="power_timer_btn", use_container_width=True):
+                try:
+                    api.set_device_switch_state(device_id, 2)
                     refresh_device_details(api, device_id)
                     st.rerun()
                 except APIError as e:
