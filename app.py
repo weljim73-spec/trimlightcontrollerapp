@@ -167,33 +167,47 @@ def render_device_controls(api: TrimlightAPI):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        # Power controls
-        st.markdown("**Power Mode**")
+        # Power controls - show current state clearly
         current_state = details.get('switchState', 0)
+        state_labels = {0: "Off", 1: "Manual", 2: "Timer"}
+        current_label = state_labels.get(current_state, "Unknown")
 
-        # Map state values to labels
-        state_options = {0: "Off", 1: "Manual", 2: "Timer"}
-        current_label = state_options.get(current_state, "Off")
+        st.markdown(f"**Power Mode** (Current: **{current_label}**)")
 
-        new_state = st.radio(
-            "Power Mode",
-            options=list(state_options.values()),
-            index=current_state if current_state in [0, 1, 2] else 0,
-            horizontal=True,
-            label_visibility="collapsed",
-            key="power_mode_radio"
-        )
+        power_col1, power_col2, power_col3 = st.columns(3)
 
-        # Check if state changed
-        new_state_value = {v: k for k, v in state_options.items()}[new_state]
-        if new_state_value != current_state:
-            try:
-                api.set_device_switch_state(device_id, new_state_value)
-                st.success(f"{new_state} mode enabled")
-                refresh_device_details(api, device_id)
-                st.rerun()
-            except APIError as e:
-                st.error(f"Error: {e.message}")
+        with power_col1:
+            off_label = "✓ Off" if current_state == 0 else "Off"
+            if st.button(off_label, use_container_width=True, key="power_off_btn",
+                        disabled=(current_state == 0)):
+                try:
+                    api.set_device_switch_state(device_id, 0)
+                    refresh_device_details(api, device_id)
+                    st.rerun()
+                except APIError as e:
+                    st.error(f"Error: {e.message}")
+
+        with power_col2:
+            manual_label = "✓ Manual" if current_state == 1 else "Manual"
+            if st.button(manual_label, use_container_width=True, key="power_manual_btn",
+                        disabled=(current_state == 1)):
+                try:
+                    api.set_device_switch_state(device_id, 1)
+                    refresh_device_details(api, device_id)
+                    st.rerun()
+                except APIError as e:
+                    st.error(f"Error: {e.message}")
+
+        with power_col3:
+            timer_label = "✓ Timer" if current_state == 2 else "Timer"
+            if st.button(timer_label, use_container_width=True, key="power_timer_btn",
+                        disabled=(current_state == 2)):
+                try:
+                    api.set_device_switch_state(device_id, 2)
+                    refresh_device_details(api, device_id)
+                    st.rerun()
+                except APIError as e:
+                    st.error(f"Error: {e.message}")
 
     with col2:
         # LED count setting
