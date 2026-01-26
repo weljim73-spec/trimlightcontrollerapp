@@ -171,40 +171,29 @@ def render_device_controls(api: TrimlightAPI):
         st.markdown("**Power Mode**")
         current_state = details.get('switchState', 0)
 
-        power_col1, power_col2, power_col3 = st.columns(3)
+        # Map state values to labels
+        state_options = {0: "Off", 1: "Manual", 2: "Timer"}
+        current_label = state_options.get(current_state, "Off")
 
-        with power_col1:
-            if st.button("Off", use_container_width=True,
-                        type="primary" if current_state == 0 else "secondary",
-                        key="power_off_btn"):
-                try:
-                    api.set_device_switch_state(device_id, 0)
-                    st.success("Lights turned off")
-                    refresh_device_details(api, device_id)
-                except APIError as e:
-                    st.error(f"Error: {e.message}")
+        new_state = st.radio(
+            "Power Mode",
+            options=list(state_options.values()),
+            index=current_state if current_state in [0, 1, 2] else 0,
+            horizontal=True,
+            label_visibility="collapsed",
+            key="power_mode_radio"
+        )
 
-        with power_col2:
-            if st.button("Manual", use_container_width=True,
-                        type="primary" if current_state == 1 else "secondary",
-                        key="power_manual_btn"):
-                try:
-                    api.set_device_switch_state(device_id, 1)
-                    st.success("Manual mode enabled")
-                    refresh_device_details(api, device_id)
-                except APIError as e:
-                    st.error(f"Error: {e.message}")
-
-        with power_col3:
-            if st.button("Timer", use_container_width=True,
-                        type="primary" if current_state == 2 else "secondary",
-                        key="power_timer_btn"):
-                try:
-                    api.set_device_switch_state(device_id, 2)
-                    st.success("Timer mode enabled")
-                    refresh_device_details(api, device_id)
-                except APIError as e:
-                    st.error(f"Error: {e.message}")
+        # Check if state changed
+        new_state_value = {v: k for k, v in state_options.items()}[new_state]
+        if new_state_value != current_state:
+            try:
+                api.set_device_switch_state(device_id, new_state_value)
+                st.success(f"{new_state} mode enabled")
+                refresh_device_details(api, device_id)
+                st.rerun()
+            except APIError as e:
+                st.error(f"Error: {e.message}")
 
     with col2:
         # LED count setting
