@@ -165,8 +165,16 @@ def render_device_controls(api: TrimlightAPI):
 
     st.subheader("⚡ Device Controls")
 
-    # Power controls - use a single row with all controls
-    current_state = details.get('switchState', 0)
+    # Get current state from device list (more up-to-date) or fall back to details
+    current_state = None
+    for device in st.session_state.devices:
+        if device.get('deviceId') == device_id:
+            current_state = device.get('switchState')
+            break
+
+    if current_state is None:
+        current_state = details.get('switchState', 0)
+
     state_labels = {0: "Off", 1: "Manual", 2: "Timer"}
     current_label = state_labels.get(current_state, "Unknown")
 
@@ -178,6 +186,7 @@ def render_device_controls(api: TrimlightAPI):
         if st.button("Off", key="power_off_btn"):
             try:
                 api.set_device_switch_state(device_id, 0)
+                refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
             except APIError as e:
@@ -187,6 +196,7 @@ def render_device_controls(api: TrimlightAPI):
         if st.button("Manual", key="power_manual_btn"):
             try:
                 api.set_device_switch_state(device_id, 1)
+                refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
             except APIError as e:
@@ -196,6 +206,7 @@ def render_device_controls(api: TrimlightAPI):
         if st.button("Timer", key="power_timer_btn"):
             try:
                 api.set_device_switch_state(device_id, 2)
+                refresh_devices(api)
                 refresh_device_details(api, device_id)
                 st.rerun()
             except APIError as e:
